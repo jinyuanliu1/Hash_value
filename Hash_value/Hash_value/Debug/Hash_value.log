@@ -1,0 +1,5 @@
+﻿  Hash_value.cpp
+D:\程序的集合\Hash_value\Hash_value\Hash_value.h(457,29): warning C4244: “参数”: 从“unsigned __int64”转换到“unsigned int”，可能丢失数据
+D:\程序的集合\Hash_value\Hash_value\Hash_value.h(459,19): warning C4244: “-=”: 从“unsigned __int64”转换到“unsigned int”，可能丢失数据
+D:\程序的集合\Hash_value\Hash_value\Hash_value.h(472,18): warning C4244: “初始化”: 从“unsigned __int64”转换到“unsigned int”，可能丢失数据
+  Hash_value.vcxproj -> D:\程序的集合\Hash_value\Debug\Hash_value.exe
