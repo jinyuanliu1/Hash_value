@@ -4,6 +4,23 @@
 #define MEOW_HASH_VERSION 5
 #define MEOW_HASH_VERSION_NAME "0.5/calico"
 
+
+
+#define prefetcht0(A) _mm_prefetch((char *)(A), _MM_HINT_T0)
+#define movdqu(A, B)  A = _mm_loadu_si128((__m128i *)(B))
+#define movdqu_mem(A, B)  _mm_storeu_si128((__m128i *)(A), B)
+#define movq(A, B) A = _mm_set_epi64x(0, B);
+#define aesdec(A, B)  A = _mm_aesdec_si128(A, B)
+#define pshufb(A, B)  A = _mm_shuffle_epi8(A, B)
+#define pxor(A, B)    A = _mm_xor_si128(A, B)
+#define paddq(A, B) A = _mm_add_epi64(A, B)
+#define pand(A, B)    A = _mm_and_si128(A, B)
+#define palignr(A, B, i) A = _mm_alignr_epi8(A, B, i)
+#define pxor_clear(A, B)    A = _mm_setzero_si128(); // NOTE(casey): pxor_clear is a nonsense thing that is only here because compilers don't detect xor(a, a) is clearing a :(
+
+
+
+
 #if !defined(meow_u8)
 
 #if _MSC_VER
@@ -50,18 +67,6 @@
 #endif
 
 #endif
-
-#define prefetcht0(A) _mm_prefetch((char *)(A), _MM_HINT_T0)
-#define movdqu(A, B)  A = _mm_loadu_si128((__m128i *)(B))
-#define movdqu_mem(A, B)  _mm_storeu_si128((__m128i *)(A), B)
-#define movq(A, B) A = _mm_set_epi64x(0, B);
-#define aesdec(A, B)  A = _mm_aesdec_si128(A, B)
-#define pshufb(A, B)  A = _mm_shuffle_epi8(A, B)
-#define pxor(A, B)    A = _mm_xor_si128(A, B)
-#define paddq(A, B) A = _mm_add_epi64(A, B)
-#define pand(A, B)    A = _mm_and_si128(A, B)
-#define palignr(A, B, i) A = _mm_alignr_epi8(A, B, i)
-#define pxor_clear(A, B)    A = _mm_setzero_si128(); // NOTE(casey): pxor_clear is a nonsense thing that is only here because compilers don't detect xor(a, a) is clearing a :(
 
 #define MEOW_MIX_REG(r1, r2, r3, r4, r5,  i1, i2, i3, i4) \
 aesdec(r1, r2); \
