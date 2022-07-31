@@ -6,13 +6,29 @@
 using namespace std;
 
 
+
+#define subbytes_and_shiftrow(A) aesenc(A, _mm_setzero_si128());inv_mixcol(A)
+
+#define aesdec_inv(A, B) \
+pxor(A, B);  \
+MixColumns(A); \
+subbytes_and_shiftrow(A)
+
+
+#define MEOW_SHUFFLE_INV(r1, r2, r3, r4, r5, r6) \
+pxor(r2, r3);\
+psubq(r5, r6); \
+aesdec_inv(r4, r2); \
+pxor(r4, r6); \
+psubq(r2, r5); \
+aesdec_inv(r1, r4)
 #define movdqu(A, B)  A = _mm_loadu_si128((__m128i *)(B))
-#define psubq(A, B) A = _mm_sub_epi64(A, B) //模加逆运算
+#define psubq(A, B) A = _mm_sub_epi64(A, B) 
 #define pxor(A, B)    A = _mm_xor_si128(A, B)
 #define aesenc(A, B)  A = _mm_aesenc_si128(A, B)
 #define pxor_clear(A, B)    A = _mm_setzero_si128();
 #define aesdec(A, B)  A = _mm_aesdec_si128(A, B)
-#define inv_mixcol(A) A = _mm_aesimc_si128(A) // AES列混淆
+#define inv_mixcol(A) A = _mm_aesimc_si128(A) 
 #define movdqu(A, B)  A = _mm_loadu_si128((__m128i *)(B))
 #define palignr(A, B, i) A = _mm_alignr_epi8(A, B, i)
 #define movq(A, B) A = _mm_set_epi64x(0, B);
@@ -21,26 +37,11 @@ using namespace std;
 #define INSTRUCTION_REORDER_BARRIER _ReadWriteBarrier()
 #define movdqu_mem(A, B)  _mm_storeu_si128((__m128i *)(A), B)
 
-//由于AES的指令中没有直接的列混合的函数，这里把两个aes的加密指令放在一起
+
 #define MixColumns(A) A = _mm_aesdeclast_si128(A, _mm_setzero_si128()); A = _mm_aesenc_si128(A, _mm_setzero_si128())
 
-//通过将解密最后一轮和加密结合做到实现先字节替换再行移位
-#define subbytes_and_shiftrow(A) aesenc(A, _mm_setzero_si128());inv_mixcol(A)
 
-//实现了AES解密的逆运算
-#define aesdec_inv(A, B) \
-pxor(A, B);  \
-MixColumns(A); \
-subbytes_and_shiftrow(A)
 
-//原本头文件中MEOW_SHUFFLE的逆过程,直接顺序颠倒加
-#define MEOW_SHUFFLE_INV(r1, r2, r3, r4, r5, r6) \
-pxor(r2, r3);\
-psubq(r5, r6); \
-aesdec_inv(r4, r2); \
-pxor(r4, r6); \
-psubq(r2, r5); \
-aesdec_inv(r1, r4)
 
 #define MEOW_MIX_REG_INV(r1, r2, r3, r4, r5,  i1, i2, i3, i4) \
 pxor(r4, i4);\
@@ -58,8 +59,8 @@ void MeowHash_inv(void* Hash, void* M, meow_umm Len, void* Key)
     meow_u128 xmm8, xmm9, xmm10, xmm11, xmm12, xmm13, xmm14, xmm15;
 
     meow_u8* rcx = (meow_u8*)Hash;
-    movdqu(xmm0, rcx + 0x00);//此处接受了最后的hash值
-    movdqu(xmm1, rcx + 0x10);//后面就属于越界访存，但是我们并不关心具体是什么
+    movdqu(xmm0, rcx + 0x00);
+    movdqu(xmm1, rcx + 0x10);
     movdqu(xmm2, rcx + 0x20);
     movdqu(xmm3, rcx + 0x30);
     movdqu(xmm4, rcx + 0x40);
@@ -67,7 +68,7 @@ void MeowHash_inv(void* Hash, void* M, meow_umm Len, void* Key)
     movdqu(xmm6, rcx + 0x60);
     movdqu(xmm7, rcx + 0x70);
 
-    psubq(xmm0, xmm4);//最后squeeze的逆过程
+    psubq(xmm0, xmm4);
     pxor(xmm0, xmm1);
     pxor(xmm4, xmm5);
     psubq(xmm0, xmm2);
@@ -91,8 +92,6 @@ void MeowHash_inv(void* Hash, void* M, meow_umm Len, void* Key)
     pxor_clear(xmm9, xmm9);
     pxor_clear(xmm11, xmm11);
 
-    //下面复制的头文件中关于处理不满的32byte数据的处理方法
-    //由于本题要求的消息比较短，因此我们不再处理其他的部分
     meow_u8* Last = (meow_u8*)M + (Len & ~0xf);
     int unsigned Len8 = (Len & 0xf);
     if (Len8)
